@@ -1,0 +1,79 @@
+﻿@page "/ToDoItems"
+@attribute [Authorize(AbpSolution1Permissions.TodoItems.Default)]
+@using AbpSolution1.Permissions
+@inherits AbpSolution1ComponentBase
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@* @inject PageLayout PageLayout
+@{
+    PageLayout.Title = L["Menu:Home"];
+    PageLayout.ShowToolbar = false;
+} *@
+
+<div class="container">
+    <Card>
+        <CardHeader>
+            <CardTitle>
+                TODO LIST
+            </CardTitle>
+        </CardHeader>
+        <CardBody>
+            <!-- FORM FOR NEW TODO ITEMS -->
+            <form id="NewItemForm" @onsubmit:preventDefault @onsubmit="() => Create()" class="row row-cols-lg-auto g-3 align-items-center mb-4">
+                <div class="col-12">
+                    <div class="input-group">
+                        <input name="NewTodoText" type="text" @bind-value="@NewTodoText" class="form-control" placeholder="enter text..." />
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+            <!-- TODO ITEMS LIST -->
+            @* <ul id="TodoList">
+                @foreach (var todoItem in TodoItems)
+                {
+                    <li data-id="@todoItem.Id">
+                        <i class="far fa-trash-alt"
+                           @onclick="() => Delete(todoItem)"></i> @todoItem.Text
+                    </li>
+                }
+            </ul> *@
+
+            <ul id="TodoList" class="list-group">
+                @foreach (var todoItem in TodoItems)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="@todoItem.Id">
+                        <span>@todoItem.Text</span>
+                        <div>
+                            <i class="fas fa-edit text-primary me-3" style="cursor:pointer"
+                               @onclick="() => OpenEditModal(todoItem)"></i>
+                            
+                            <i class="far fa-trash-alt text-danger" style="cursor:pointer"
+                               @onclick="() => Delete(todoItem)"></i>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+        </CardBody>
+    </Card>
+</div>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Edit Item</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label>Task Description</label>
+                <input type="text" class="form-control" @bind="EditingTodo.Text" />
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <button class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+            <button class="btn btn-primary" @onclick="UpdateAsync">Save Changes</button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

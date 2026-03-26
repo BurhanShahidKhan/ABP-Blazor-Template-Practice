@@ -1,0 +1,56 @@
+{
+  "id": "d142863e-2451-4ac1-aefe-3f8004a0764b",
+  "creationTime": "03/24/2026 07:30:46 +00:00",
+  "template": "app",
+  "versions": {
+    "AbpFramework": "10.1.0",
+    "AbpStudio": "2.2.1",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "AbpSolution1": {
+      "path": "AbpSolution1.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "etc/abp-studio/run-profiles/Default.abprun.json"
+    }
+  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": [
+      
+      ]
+    }
+  },
+  "creatingStudioConfiguration": {
+    "template": "app",
+    "createdAbpStudioVersion": "2.2.1",
+    "creationTool": "ABP Studio UI",
+    "tiered": "false",
+    "runInstallLibs": "",
+    "useLocalReferences": "false",
+    "multiTenancy": "true",
+    "includeTests": "true",
+    "kubernetesConfiguration": "false",
+    "uiFramework": "blazor-webapp",
+    "mobileFramework": "none",
+    "distributedEventBus": "none",
+    "databaseProvider": "ef",
+    "runDbMigrator": "",
+    "databaseManagementSystem": "sqlserver",
+    "separateTenantSchema": "false",
+    "createInitialMigration": "",
+    "theme": "leptonx-lite",
+    "themeStyle": "",
+    "themeMenuPlacement": "",
+    "mobileFramework": "none",
+    "publicWebsite": "false",
+    "socialLogin": "false",
+    "sampleCrudPage": "true",
+    "selectedLanguages": ["English", "Arabic", "Chinese (Simplified)", "Chinese (Traditional)", "Czech", "English (United Kingdom)", "Finnish", "French", "German (Germany)", "Hindi ", "Hungarian", "Icelandic", "Italian", "Portuguese (Brazil)", "Romanian (Romania)", "Russian", "Slovak", "Spanish", "Swedish", "Turkish", ],
+    "defaultLanguage": "English",
+    "createCommand": "abp new AbpSolution1 -t app --ui-framework blazor-webapp --database-provider ef --database-management-system sqlserver --theme leptonx-lite --skip-migration  --skip-migrator  --without-cms-kit --sample-crud-page --dont-run-install-libs --dont-run-bundling --no-social-logins -no-gdpr -no-openiddict-admin-ui -no-audit-logging -no-file-management -no-language-management -no-text-template-management"
+  }
+}
