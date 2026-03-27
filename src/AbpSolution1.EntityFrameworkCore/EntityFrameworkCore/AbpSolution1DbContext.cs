@@ -1,4 +1,5 @@
 using AbpSolution1.Books;
+using AbpSolution1.Demos;
 using AbpSolution1.TodoItems;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -31,6 +32,7 @@ public class AbpSolution1DbContext :
 
     public DbSet<Book> Books { get; set; }
     public DbSet<TodoItem> TodoItems { get; set; }
+    public DbSet<Demo> Demos { get; set; }
 
     #region Entities from the modules
 
@@ -93,7 +95,18 @@ public class AbpSolution1DbContext :
 
         builder.Entity<TodoItem>(b =>
         {
-            b.ToTable(AbpSolution1Consts.DbTablePrefix + "TodoItems");
+            b.ToTable(AbpSolution1Consts.DbTablePrefix + "TodoItems",
+                AbpSolution1Consts.DbSchema);
+            b.ConfigureByConvention(); //auto configure for the base class props
+            b.Property(x => x.Text).IsRequired().HasMaxLength(128);
+        });
+
+        builder.Entity<Demo>(b =>
+        {
+            b.ToTable(AbpSolution1Consts.DbTablePrefix + "Demodata",
+                AbpSolution1Consts.DbSchema);
+            b.ConfigureByConvention(); //auto configure for the base class props
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
         });
 
         /* Configure your own tables/entities inside here */

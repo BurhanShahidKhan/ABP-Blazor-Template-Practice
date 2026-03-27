@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using AbpSolution1.Localization;
@@ -12,6 +12,7 @@ using Volo.Abp.SettingManagement.Blazor.Menus;
 using Volo.Abp.Users;
 using Volo.Abp.TenantManagement.Blazor.Navigation;
 using Volo.Abp.Identity.Blazor;
+using Microsoft.Extensions.Localization;
 
 namespace AbpSolution1.Blazor.Client.Navigation;
 
@@ -39,15 +40,31 @@ public class AbpSolution1MenuContributor : IMenuContributor
 
     private static async Task ConfigureMainMenuAsync(MenuConfigurationContext context)
     {
-        var l = context.GetLocalizer<AbpSolution1Resource>();
-        
+        var localizer = context.GetLocalizer<AbpSolution1Resource>();
+        string GetText(string key, string fallback)
+        {
+            try
+            {
+                if (localizer != null)
+                {
+                    var localized = localizer[key];
+                    if (!string.IsNullOrEmpty(localized)) return localized;
+                }
+            }
+            catch
+            {
+                // ignore localization errors
+            }
+            return fallback;
+        }
+
         //Administration
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
 
         context.Menu.AddItem(new ApplicationMenuItem(
             AbpSolution1Menus.Home,
-            l["Menu:Home"],
+            GetText("Menu:Home", "Home"),
             "/",
             icon: "fas fa-home",
             order: 1
@@ -67,57 +84,64 @@ public class AbpSolution1MenuContributor : IMenuContributor
     
         var bookStoreMenu = new ApplicationMenuItem(
             "BooksStore",
-            l["Menu:Books"],
+            GetText("Menu:Books", "Books"),
             icon: "fa fa-book"
         );
 
         context.Menu.AddItem(bookStoreMenu);
 
-        //CHECK the PERMISSION
-        if (await context.IsGrantedAsync(AbpSolution1Permissions.Books.Default))
-        {
-            bookStoreMenu.AddItem(new ApplicationMenuItem(
-                "BooksStore.Books",
-                l["Menu:Books"],
-                url: "/books"
-            ));
-        }
+        // Add Books submenu
+        bookStoreMenu.AddItem(new ApplicationMenuItem(
+            "BooksStore.Books",
+            GetText("Menu:Books", "Books"),
+            url: "/books"
+        ));
 
         var ToDoItemMenu = new ApplicationMenuItem(
             "ToDoItems",
-            l["Menu:ToDoItems"],
+            GetText("Menu:ToDoItems", "ToDoItems"),
             icon: "fa fa-list"
         );
 
         context.Menu.AddItem(ToDoItemMenu);
 
-        //CHECK the PERMISSION
-        if (await context.IsGrantedAsync(AbpSolution1Permissions.TodoItems.Default))
-        {
-            ToDoItemMenu.AddItem(new ApplicationMenuItem(
-                "ToDoItems.ToDoItems",
-                l["Menu:ToDoItems"],
-                url: "/ToDoItems"
-            ));
-        }
+        // Add ToDoItems submenu
+        ToDoItemMenu.AddItem(new ApplicationMenuItem(
+            "ToDoItems.ToDoItems",
+            GetText("Menu:ToDoItems", "ToDoItems"),
+            url: "/ToDoItems"
+        ));
+
+        var DemoMenu = new ApplicationMenuItem(
+            "Demo",
+            "Demo",
+            icon: "fa fa-cube"
+        );
+
+        context.Menu.AddItem(DemoMenu);
+
+        DemoMenu.AddItem(new ApplicationMenuItem(
+            "Demo.Listing",
+            "Demo Management",
+            url: "/demo"
+        ));
     }
     
     private async Task ConfigureUserMenuAsync(MenuConfigurationContext context)
     {
         if (OperatingSystem.IsBrowser())
         {
-            //Blazor wasm menu items
-
             var authServerUrl = _configuration["AuthServer:Authority"] ?? "";
             var accountResource = context.GetLocalizer<AccountResource>();
 
-            context.Menu.AddItem(new ApplicationMenuItem("Account.Manage", accountResource["MyAccount"], $"{authServerUrl.EnsureEndsWith('/')}Account/Manage", icon: "fa fa-cog", order: 900,  target: "_blank").RequireAuthenticated());
+            var myAccountText = "My Account";
+            try { if (accountResource != null) myAccountText = accountResource["MyAccount"]; } catch { }
 
+            context.Menu.AddItem(new ApplicationMenuItem("Account.Manage", myAccountText, $"{authServerUrl.EnsureEndsWith('/')}Account/Manage", icon: "fa fa-cog", order: 900, target: "_blank").RequireAuthenticated());
         }
         else
         {
-            //Blazor server menu items
-
+            // Blazor server menu items
         }
         await Task.CompletedTask;
     }

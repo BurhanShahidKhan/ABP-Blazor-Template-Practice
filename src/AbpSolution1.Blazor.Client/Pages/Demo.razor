@@ -1,0 +1,244 @@
+@page "/demo"
+@attribute [Authorize]
+@using AbpSolution1.Demos
+@using Blazorise
+@using System.IO
+@inherits AbpSolution1ComponentBase
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p6O1XrKXQ1k2q1sK1Zl2zq1Y1G9rF1Q1b1s6Z1q1Y1G9rF1Q1b1s6Z1q1Y1G9rF1Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<div class="container-fluid mt-4">
+    <Card>
+        <CardHeader>
+            <CardTitle>Demo Management</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <!-- SEARCH & FILTER SECTION -->
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-7 d-flex align-items-center gap-2">
+                    <input type="text" class="form-control" placeholder="Search by name or description..." 
+                           @bind-value="SearchTerm" @onkeyup="@OnSearchTermChanged" style="flex:1" />
+
+                    <select class="form-select" @onchange="@OnCategoryChanged" style="width:220px">
+                        <option value="">All Categories</option>
+                        @foreach (var category in Categories)
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex justify-content-end align-items-center flex-wrap demo-actions">
+                    <button class="btn btn-primary" @onclick="() => OpenCreateModal()">
+                        <i class="fas fa-plus me-1"></i> Add New
+                    </button>
+                    <button class="btn btn-success" @onclick="ExportData">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="DownloadTemplate">
+                        <i class="fas fa-file-csv me-1"></i> Download Template
+                    </button>
+                    <button class="btn btn-info" @onclick="() => TriggerFileInput()">
+                        <i class="fas fa-upload me-1"></i> Import
+                    </button>
+                    <InputFile id="demoFileInput" style="display:none" OnChange="ImportData" />
+                </div>
+            </div>
+
+            <!-- RECORDS TABLE -->
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Active</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (FilteredItems == null || FilteredItems.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No records found</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in FilteredItems)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.Description</td>
+                                <td><span class="badge bg-info">@item.Category</span></td>
+                                <td>
+                                    <span class="badge" style="background-color: @GetPriorityColor(item.Priority)">
+                                        @item.Priority
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.IsActive ? "bg-success" : "bg-danger")">
+                                        @(item.IsActive ? "Yes" : "No")
+                                    </span>
+                                </td>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditModal(item)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger ms-1" @onclick="() => DeleteItem(item)">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </CardBody>
+    </Card>
+</div>
+
+<!-- CREATE/EDIT MODAL -->
+<Modal @ref="DemoModal">
+    <ModalContent Centered Size="ModalSize.Large">
+        <ModalHeader>
+            <ModalTitle>@(IsEditMode ? "Edit Demo" : "Create New Demo")</ModalTitle>
+            <CloseButton Clicked="@(() => CloseModal())" />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group mb-3">
+                <label class="form-label">Name *</label>
+                <input type="text" class="form-control" @bind="EditingItem.Name" />
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" rows="3" @bind="EditingItem.Description"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" @bind="EditingItem.Category">
+                            <option value="">Select Category</option>
+                            @foreach (var category in Categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Priority</label>
+                        <input type="number" class="form-control" @bind="EditingItem.Priority" min="1" max="10" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="isActive" @bind="EditingItem.IsActive" />
+                <label class="form-check-label" for="isActive">
+                    Is Active
+                </label>
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <button class="btn btn-secondary" @onclick="@(async () => CloseModal())">Cancel</button>
+            <button class="btn btn-primary" @onclick="SaveItem">Save</button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<style>
+    /* Action buttons - modern rounded pills with subtle shadow and gradients */
+    .demo-actions .btn {
+        min-width: 140px;
+        margin-left: .5rem;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .55rem 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 6px 18px rgba(22, 38, 60, 0.08);
+        transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+        border: none;
+    }
+
+    .demo-actions .btn:first-child { margin-left: 0; }
+    .demo-actions .btn i { margin-right: .6rem; font-size: 1.05rem; }
+
+    .demo-actions .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(22, 38, 60, 0.12); }
+
+    /* Variant colors with soft gradients */
+    .demo-actions .btn-primary {
+        background: linear-gradient(180deg, #2f80ff 0%, #205ed6 100%);
+        color: #ffffff;
+    }
+
+    .demo-actions .btn-success {
+        background: linear-gradient(180deg, #4cd287 0%, #2fb055 100%);
+        color: #ffffff;
+    }
+
+    .demo-actions .btn-info {
+        background: linear-gradient(180deg, #48a9bf 0%, #2b8796 100%);
+        color: #ffffff;
+    }
+
+    .demo-actions .btn.btn-outline-secondary {
+        background: linear-gradient(180deg, #ffffff, #ffffff);
+        color: #6f42c1;
+        border: 1px solid rgba(111, 66, 193, 0.14);
+        box-shadow: none;
+    }
+
+    /* Table action buttons - small rounded chips */
+    table .btn-sm {
+        border-radius: 10px;
+        padding: .35rem .75rem;
+        font-weight: 700;
+        box-shadow: none;
+        transition: transform .08s ease, box-shadow .08s ease;
+    }
+
+    table .btn-sm.btn-warning { background: linear-gradient(180deg,#ffb84d,#ff9a2e); color:#fff; border:none; }
+    table .btn-sm.btn-danger { background: linear-gradient(180deg,#ff5c86,#d82f5b); color:#fff; border:none; }
+
+    table .btn-sm:hover { transform: translateY(-2px); }
+
+    /* Responsive adjustments */
+    @@media (max-width: 991px) {
+        .demo-actions .btn { min-width: 120px; padding: .45rem .9rem; }
+    }
+
+    @@media (max-width: 575px) {
+        .demo-actions { justify-content: flex-start !important; gap: .5rem; }
+        .demo-actions .btn { min-width: 100px; padding: .45rem .7rem; margin-left: 0.25rem; }
+    }
+</style>
+
+<script>
+    window.downloadFile = function (base64, fileName, contentType) {
+        try {
+            const link = document.createElement('a');
+            link.href = "data:" + (contentType || 'application/octet-stream') + ";base64," + base64;
+            link.download = fileName || 'file';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (e) {
+            console.error('downloadFile error', e);
+        }
+    };
+
+    window.triggerFileInput = function (id) {
+        try {
+            const el = document.getElementById(id);
+            if (el) el.click();
+        } catch (e) {
+            console.error('triggerFileInput error', e);
+        }
+    };
+</script>

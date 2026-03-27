@@ -21,6 +21,17 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+*.log
+*.txt
+[Ll]ogs/*.txt
+[Tt]mp/
+
+# Ignore the specific Logs folder in the Blazor project
+AbpSolution1.Blazor/Logs/
+
+# Or more generally for any .NET project
+**/Logs/
+*.log
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -68,6 +79,8 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+*.txt
+*.md
 
 # Chutzpah Test files
 _Chutzpah*
